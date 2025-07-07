@@ -1,7 +1,7 @@
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
-from shiny import App, ui, render
+from shiny import App, ui, render, reactive, req
 from shinywidgets import output_widget, render_plotly, render_widget
 from palmerpenguins import load_penguins
 
@@ -67,27 +67,31 @@ app_ui = ui.page_fluid(
 # Define Server
 def server(input, output, session):
 
-    @render.data_frame
-    def data_table():
+    @reactive.calc
+    def filtered_data():
+        #ensure the user selected at least one species
+        req(input.selected_species_list())
+
+        #Filter the dataframe to only include selected species
         return penguins_df[
             penguins_df["species"].isin(input.selected_species_list())
         ]
 
     @render.data_frame
+    def data_table():
+       return filtered_data()
+
+    @render.data_frame
     def data_grid():
-        return penguins_df[
-            penguins_df["species"].isin(input.selected_species_list())
-        ]
+        return filtered_data()
 
     @render_plotly
     def plotly_histogram():
         col = input.selected_attribute()
         bins = input.plotly_bin_count() or 10
-        filtered = penguins_df[
-            penguins_df["species"].isin(input.selected_species_list())
-        ]
+     
         fig = px.histogram(
-            filtered,
+            filtered_data(),
             x=col,
             nbins=bins,
             color="species",
@@ -99,12 +103,10 @@ def server(input, output, session):
     def seaborn_histogram():
         col = input.selected_attribute()
         bins = input.seaborn_bin_count() or 20
-        filtered = penguins_df[
-            penguins_df["species"].isin(input.selected_species_list())
-        ]
+ 
         fig, ax = plt.subplots()
         sns.histplot(
-            data=filtered,
+            data=filtered_data(),
             x=col,
             bins=bins,
             kde=True,
@@ -116,11 +118,9 @@ def server(input, output, session):
 
     @render_plotly
     def plotly_scatterplot():
-        filtered = penguins_df[
-            penguins_df["species"].isin(input.selected_species_list())
-        ]
+      
         fig = px.scatter(
-            filtered,
+            filtered_data(),
             x="bill_length_mm",
             y="body_mass_g",
             color="species",

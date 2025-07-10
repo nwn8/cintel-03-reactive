@@ -47,13 +47,14 @@ app_ui = ui.page_fluid(
         ),
 
         ui.layout_columns(
-            ui.output_data_frame("data_table"),
-            ui.output_data_frame("data_grid"),
+            ui.card(  ui.output_data_frame("data_table")),
+              
+            ui.card( ui.output_data_frame("data_grid"))
         ),
 
         ui.layout_columns(
-            output_widget("plotly_histogram"),
-            ui.output_plot("seaborn_histogram"),
+            ui.card(output_widget("plotly_histogram")),
+            ui.card(ui.output_plot("seaborn_histogram")),
         ),
 
         ui.card(
@@ -77,6 +78,7 @@ def server(input, output, session):
             penguins_df["species"].isin(input.selected_species_list())
         ]
 
+  
     @render.data_frame
     def data_table():
        return filtered_data()
@@ -84,6 +86,7 @@ def server(input, output, session):
     @render.data_frame
     def data_grid():
         return filtered_data()
+        
 
     @render_plotly
     def plotly_histogram():
